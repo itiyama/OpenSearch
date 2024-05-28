@@ -64,25 +64,30 @@ public class CodecService {
      */
     public static final String LUCENE_DEFAULT_CODEC = "lucene_default";
 
-    public CodecService(@Nullable MapperService mapperService, IndexSettings indexSettings, Logger logger) {
+
+    public CodecService(@Nullable MapperService mapperService, IndexSettings indexSettings, Logger logger, LuceneCodecFactory luceneCodecFactory) {
         final MapBuilder<String, Codec> codecs = MapBuilder.<String, Codec>newMapBuilder();
         assert null != indexSettings;
         if (mapperService == null) {
-            codecs.put(DEFAULT_CODEC, new Lucene95Codec());
-            codecs.put(LZ4, new Lucene95Codec());
-            codecs.put(BEST_COMPRESSION_CODEC, new Lucene95Codec(Mode.BEST_COMPRESSION));
-            codecs.put(ZLIB, new Lucene95Codec(Mode.BEST_COMPRESSION));
+            codecs.put(DEFAULT_CODEC, luceneCodecFactory.getDefaultCodec());
+            codecs.put(LZ4, luceneCodecFactory.getDefaultCodec());
+            codecs.put(BEST_COMPRESSION_CODEC, luceneCodecFactory.getBestCompressionCodec());
+            codecs.put(ZLIB, luceneCodecFactory.getBestCompressionCodec());
         } else {
-            codecs.put(DEFAULT_CODEC, new PerFieldMappingPostingFormatCodec(Mode.BEST_SPEED, mapperService, logger));
-            codecs.put(LZ4, new PerFieldMappingPostingFormatCodec(Mode.BEST_SPEED, mapperService, logger));
-            codecs.put(BEST_COMPRESSION_CODEC, new PerFieldMappingPostingFormatCodec(Mode.BEST_COMPRESSION, mapperService, logger));
-            codecs.put(ZLIB, new PerFieldMappingPostingFormatCodec(Mode.BEST_COMPRESSION, mapperService, logger));
+            codecs.put(DEFAULT_CODEC, luceneCodecFactory.getPerFieldMappingBestSpeedCodec(mapperService, logger));
+            codecs.put(LZ4, luceneCodecFactory.getPerFieldMappingBestSpeedCodec(mapperService, logger));
+            codecs.put(BEST_COMPRESSION_CODEC, luceneCodecFactory.getPerFieldMappingBestCompressionCodec(mapperService, logger));
+            codecs.put(ZLIB, luceneCodecFactory.getPerFieldMappingBestCompressionCodec(mapperService, logger));
         }
         codecs.put(LUCENE_DEFAULT_CODEC, Codec.getDefault());
         for (String codec : Codec.availableCodecs()) {
             codecs.put(codec, Codec.forName(codec));
         }
         this.codecs = codecs.immutableMap();
+    }
+
+    public CodecService(@Nullable MapperService mapperService, IndexSettings indexSettings, Logger logger) {
+        this(mapperService, indexSettings, logger, new LuceneCodecFactory("Lucene95"));
     }
 
     @Deprecated(since = "2.9.0", forRemoval = true)

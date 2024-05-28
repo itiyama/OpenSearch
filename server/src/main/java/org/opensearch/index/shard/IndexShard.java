@@ -117,6 +117,7 @@ import org.opensearch.index.cache.IndexCache;
 import org.opensearch.index.cache.bitset.ShardBitsetFilterCache;
 import org.opensearch.index.cache.request.ShardRequestCache;
 import org.opensearch.index.codec.CodecService;
+import org.opensearch.index.codec.LuceneCodecFactory;
 import org.opensearch.index.engine.CommitStats;
 import org.opensearch.index.engine.Engine;
 import org.opensearch.index.engine.Engine.GetResult;
@@ -377,7 +378,7 @@ public class IndexShard extends AbstractIndexShardComponent implements IndicesCl
         assert shardRouting.initializing();
         this.shardRouting = shardRouting;
         final Settings settings = indexSettings.getSettings();
-        this.codecService = new CodecService(mapperService, indexSettings, logger);
+        this.codecService = new CodecService(mapperService, indexSettings, logger, new LuceneCodecFactory("Lucene92"));
         this.warmer = warmer;
         this.similarityService = similarityService;
         Objects.requireNonNull(store, "Store must be provided to the index shard");
